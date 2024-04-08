@@ -17,6 +17,8 @@
 					<Add option="-DWINVER=0x0601" />
 					<Add option="-DWIN32" />
 					<Add option="-D_WIN32" />
+					<Add option="-DCREATE_WAITABLE_TIMER_MANUAL_RESET=0x00000001" />
+					<Add option="-DCREATE_WAITABLE_TIMER_HIGH_RESOLUTION=0x00000002" />
 					<Add directory="." />
 					<Add directory="lvgl" />
 				</Compiler>
