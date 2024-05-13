@@ -16,6 +16,7 @@
 
 #include <windows.h>
 
+#include "app/my_test.h"
 #include "app/my_gui.h"
 
 /*********************
@@ -55,7 +56,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLi
     LV_LOG_USER("LVGL initialization completed!");
 
     /*Run the demo*/
-    lv_100ask_demo_course_3_3_1();
+    // lv_100ask_demo_course_3_3_1();
+    my_gui_init();
 
     while(!lv_win32_quit_signal) {
         /* Periodically call the lv_task handler.

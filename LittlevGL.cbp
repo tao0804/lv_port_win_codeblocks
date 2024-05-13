@@ -40,6 +40,14 @@
 			<Add option="-Wall" />
 			<Add directory="." />
 		</Compiler>
+		<Unit filename="app/my_gui.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/my_gui.h" />
+		<Unit filename="app/my_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="app/my_test.h" />
 		<Unit filename="lv_conf.h" />
 		<Unit filename="lv_demos/src/lv_demo.h" />
 		<Unit filename="lv_demos/src/lv_demo_benchmark/lv_demo_benchmark.h" />
