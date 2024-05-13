@@ -2,7 +2,116 @@
 #include "lvgl/lvgl.h"
 #include "lv_drivers/win32drv/win32drv.h"
 
-void my_gui_init(void)
+#define  BATTERY_OUTLINE_W    40 //电池图标宽度
+#define  BATTERY_OUTLINE_H    20 //电池图标高度
+
+static void my_gui_battery_cb(void* p, int32_t v)
+{
+    //实现变色效果，电池电量低于20% 红色
+    static int32_t cnt;
+    if (cnt >= BATTERY_OUTLINE_W * 0.2 && v < BATTERY_OUTLINE_W * 0.2)
+    {
+        lv_obj_set_style_bg_color(p, lv_color_hex(0xff0000), 0);
+    }
+    else if (v >= BATTERY_OUTLINE_W * 0.2 && cnt < BATTERY_OUTLINE_W * 0.2)
+    {
+        lv_obj_set_style_bg_color(p, lv_color_hex(0xff00), 0);
+    }
+    cnt = v;
+
+    //修改电量颜色obj宽度
+    lv_obj_set_width(p, v);
+
+    //修改电池百分比
+    lv_obj_t *text = lv_obj_get_child(lv_obj_get_parent(p), -1);
+    lv_label_set_text_fmt(text, "%d", v*100/(BATTERY_OUTLINE_W-4));
+}
+
+static void my_gui_battery_init(void)
+{
+    lv_obj_t* outline = lv_obj_create(lv_scr_act());
+
+    //设置border和pading
+    lv_obj_set_style_border_width(outline, 2, 0);
+    lv_obj_set_style_pad_all(outline, 0, 0);
+
+    //设置圆角
+    lv_obj_set_style_radius(outline, 8, 0);
+
+    //关闭滚动条
+    lv_obj_clear_flag(outline, LV_OBJ_FLAG_SCROLLABLE);
+
+    //设置宽高
+    lv_obj_set_size(outline, BATTERY_OUTLINE_W, BATTERY_OUTLINE_H);
+
+    //居中对齐
+    lv_obj_align(outline, LV_ALIGN_CENTER, 0, 0);
+
+    //电池电量填充obj
+    lv_obj_t* pad = lv_obj_create(outline);
+
+
+    //设置outline
+    lv_obj_set_style_outline_width(pad, 0, 0);
+    lv_obj_set_style_outline_pad(pad, 0, 0);
+    lv_obj_set_style_border_width(pad, 0, 0);
+    //设置背景色
+    lv_obj_set_style_bg_color(pad, lv_color_hex(0xff0000), 0);
+
+    //设置宽高
+    lv_obj_set_size(pad, BATTERY_OUTLINE_W, BATTERY_OUTLINE_H-4);
+    lv_obj_set_style_border_width(pad, 0, 0);
+
+    //设置圆角
+    lv_obj_set_style_radius(pad, 8, 0);
+
+    //右上显示
+    lv_obj_align(outline, LV_ALIGN_TOP_RIGHT, 0, 0);
+
+    //关闭滚动条
+    lv_obj_clear_flag(pad, LV_OBJ_FLAG_SCROLLABLE);
+
+    //电池百分比
+    lv_obj_t* label = lv_label_create(outline);
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+
+    //设置动画， 模仿电池电量变化
+    lv_anim_t a;
+    lv_anim_init(&a);
+
+    /*Set the "animator" function*/
+    lv_anim_set_exec_cb(&a, my_gui_battery_cb);
+
+    /*Set the "animator" function*/
+    lv_anim_set_var(&a, pad);
+
+    /*Length of the animation [ms]*/
+    lv_anim_set_time(&a, 10000);
+
+    /*Set start and end values. E.g. 0, 150*/
+    lv_anim_set_values(&a, 0, BATTERY_OUTLINE_W-4);
+
+    /*Time to wait before starting the animation [ms]*/
+    lv_anim_set_delay(&a, 1000);
+
+    /*Play the animation backward too with this duration. Default is 0 (disabled) [ms]*/
+    lv_anim_set_playback_time(&a, 0);
+
+    /*Delay before playback. Default is 0 (disabled) [ms]*/
+    lv_anim_set_playback_delay(&a, 0);
+
+    /*Number of repetitions. Default is 1.  LV_ANIM_REPEAT_INFINIT for infinite repetition*/
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+
+    /*Delay before repeat. Default is 0 (disabled) [ms]*/
+    lv_anim_set_repeat_delay(&a, 1000);
+
+    /* START THE ANIMATION
+     *------------------*/
+    lv_anim_start(&a);                             /*Start the animation*/
+}
+
+static void my_gui_tabview_init(void)
 {
     /*Create a Tab view object*/
     lv_obj_t * tabview;
@@ -88,4 +197,10 @@ void my_gui_init(void)
     lv_label_set_text(label, "Version: 0.0.2");
     lv_obj_align(label, LV_ALIGN_TOP_LEFT, 10, 10);
 #endif
+}
+
+void my_gui_init(void)
+{
+    my_gui_tabview_init();
+    my_gui_battery_init();
 }
