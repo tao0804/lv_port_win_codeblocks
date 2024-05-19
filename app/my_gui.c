@@ -2,6 +2,10 @@
 #include "lvgl/lvgl.h"
 #include "lv_drivers/win32drv/win32drv.h"
 
+lv_obj_t *tabview;
+lv_group_t *group1, *group2;
+lv_obj_t *btn1, *btn2, *btn3, *btn4;
+
 #define  BATTERY_OUTLINE_W    40 //电池图标宽度
 #define  BATTERY_OUTLINE_H    20 //电池图标高度
 
@@ -149,10 +153,63 @@ static void my_gui_btn_cb(lv_event_t * e)
     }
 }
 
+static void my_gui_set_group(lv_group_t *g)
+{
+    if (g == group1) {
+        lv_group_remove_all_objs(group1);
+        lv_group_add_obj(group1, lv_tabview_get_tab_btns(tabview));     // tableview 按键也加进group
+        lv_group_add_obj(group1, btn1);
+        lv_group_add_obj(group1, btn2);
+        lv_group_add_obj(group1, btn3);
+        lv_group_add_obj(group1, btn4);
+        lv_indev_set_group(lv_win32_keypad_device_object, group1);     // 将键盘和组1关联
+    } else if (g == group2) {
+        lv_group_remove_all_objs(group2);
+        lv_group_add_obj(group2, lv_tabview_get_tab_btns(tabview));
+        lv_indev_set_group(lv_win32_keypad_device_object, group2);     // 将键盘和组2关联
+    }
+}
+
+static void my_gui_tv_cb(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_tabview_t *tv = tabview;
+    uint32_t key = *(uint32_t*)lv_event_get_param(e);
+    uint8_t act_id;
+
+    if (event_code != LV_EVENT_KEY) {
+        return; // 本回调只处理KEY事件
+    }
+
+    if (key == LV_KEY_RIGHT) {
+        // 右移tabview
+        if (tv->tab_cur + 1 < tv->tab_cnt) {
+            act_id = tv->tab_cur + 1;
+        } else {
+            act_id = 0;
+        }
+        LV_LOG_USER("right, cur:%d, next:%d", tv->tab_cur, act_id);
+    } else if (key == LV_KEY_LEFT) {
+        // 左移tabview
+        if (tv->tab_cur > 0) {
+            act_id = tv->tab_cur - 1;
+        } else {
+            act_id = tv->tab_cnt - 1;
+        }
+        LV_LOG_USER("left, cur:%d, next:%d", tv->tab_cur, act_id);
+    }
+
+    if (act_id == 0) {
+        my_gui_set_group(group1);
+    } else {
+        my_gui_set_group(group2);
+    }
+    lv_tabview_set_act(tv, act_id, LV_ANIM_OFF);    // 设置完group后再切，否则存在问题，不能开启动画，否则动画帧有focus问题
+}
+
 static void my_gui_tabview_init(void)
 {
     /*Create a Tab view object*/
-    lv_obj_t * tabview;
     tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 40);  // tab_size 设置选项卡高度
     lv_obj_set_size(tabview, 240, 300);  // 设置整体大小
     lv_obj_align(tabview, LV_ALIGN_TOP_MID, 0, 20);
@@ -177,10 +234,6 @@ static void my_gui_tabview_init(void)
     lv_obj_add_style(list1, &style, 0);
 
     // 创建按键
-    lv_obj_t * btn1;
-    lv_obj_t * btn2;
-    lv_obj_t * btn3;
-    lv_obj_t * btn4;
     btn1 = lv_list_add_btn(list1, NULL, "Freq:");
     lv_obj_add_event_cb(btn1, my_gui_btn_cb, LV_EVENT_KEY, NULL);
 
@@ -194,13 +247,12 @@ static void my_gui_tabview_init(void)
     lv_obj_add_event_cb(btn4, my_gui_btn_cb, LV_EVENT_KEY, NULL);
 
     // 创建group
-    lv_group_t * group1 = lv_group_create();
-    lv_indev_set_group(lv_win32_keypad_device_object, group1);     // 将键盘和组关联
-    lv_group_add_obj(group1, btn1);
-    lv_group_add_obj(group1, btn2);
-    lv_group_add_obj(group1, btn3);
-    lv_group_add_obj(group1, btn4);
-    lv_group_set_default(group1);   // 设置为默认组
+    group1 = lv_group_create();
+    my_gui_set_group(group1);    // 设置group
+
+    // 创group2，tabview按键回调
+    group2 = lv_group_create();
+    lv_obj_add_event_cb(lv_tabview_get_tab_btns(tabview), my_gui_tv_cb, LV_EVENT_KEY, NULL);
 
     // 创建config值 label
     static lv_obj_t * label1;
@@ -238,7 +290,6 @@ static void my_gui_tabview_init(void)
     lv_obj_set_flex_grow(label4, 1);
     lv_obj_set_user_data(btn4, label4);
     lv_obj_set_user_data(label4, &cfg4);
-
 #endif
 
 #if 1
