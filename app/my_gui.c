@@ -99,7 +99,7 @@ static void my_gui_battery_init(void)
 
     /*Delay before playback. Default is 0 (disabled) [ms]*/
     lv_anim_set_playback_delay(&a, 0);
-
+    
     /*Number of repetitions. Default is 1.  LV_ANIM_REPEAT_INFINIT for infinite repetition*/
     lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
 
@@ -159,119 +159,108 @@ static void my_gui_tabview_init(void)
 
 #if 1
     // tabview中增加一个tab
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Config");
+    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Real-time");
     lv_obj_set_scrollbar_mode(tab1, LV_SCROLLBAR_MODE_OFF);     // 关滚动栏
 
-    // 创建样式，应用于list，直角边，透明背景，无边界值
-    static lv_style_t style;    // 需要为static，不然不起作用
-    lv_style_init(&style);
-    lv_style_set_radius(&style, 0);
-    lv_style_set_bg_opa(&style, LV_OPA_TRANSP); // 设置透明背景
-    lv_style_set_border_width(&style, 0);
+	static lv_style_t style1;    // 需要为static，不然不起作用
+    lv_style_init(&style1);
+    lv_style_set_radius(&style1, 0);	// tao:无圆角
+    lv_style_set_bg_opa(&style1, LV_OPA_TRANSP); // 背景透明
+    lv_style_set_border_width(&style1, 0);	// 无边框
 
-    /*Add content to the tab1*/
-    lv_obj_t * list1;
-    list1 = lv_list_create(tab1);
-    lv_obj_set_size(list1, 240, 260);
-    lv_obj_align(list1, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_add_style(list1, &style, 0);
+    /*Add content to the tab2*/
+    lv_obj_t * table1 = lv_table_create(tab1);
+    lv_group_remove_obj(table1); // 不分配group
+	lv_obj_add_style(table1, &style1, 0);
 
-    // 创建按键
-    lv_obj_t * btn1;
-    lv_obj_t * btn2;
-    lv_obj_t * btn3;
-    lv_obj_t * btn4;
-    btn1 = lv_list_add_btn(list1, NULL, "Freq:");
-    lv_obj_add_event_cb(btn1, my_gui_btn_cb, LV_EVENT_KEY, NULL);
+	// tao:设置表格的行数和列数
+	lv_table_set_row_cnt(table1, 3);
+	lv_table_set_col_cnt(table1, 2);
 
-    btn2 = lv_list_add_btn(list1, NULL, "Rate:");
-    lv_obj_add_event_cb(btn2, my_gui_btn_cb, LV_EVENT_KEY, NULL);
+	// 实际值和单位需要转成一条字符串,到时问gpt如何传入
+    lv_table_set_cell_value(table1, 0, 0, "Current Voltage");
+    lv_table_set_cell_value(table1, 0, 1, "0 V");
+    lv_table_set_cell_value(table1, 1, 0, "Current Current");
+    lv_table_set_cell_value(table1, 1, 1, "0 A");
+    lv_table_set_cell_value(table1, 2, 0, "Current Power");
+    lv_table_set_cell_value(table1, 2, 1, "0 W");
 
-    btn3 = lv_list_add_btn(list1, NULL, "Volume:");
-    lv_obj_add_event_cb(btn3, my_gui_btn_cb, LV_EVENT_KEY, NULL);
+    /*Set a smaller height to the table. It'll make it scrollable*/
+    lv_table_set_col_width(table1, 0, 120);
+    lv_table_set_col_width(table1, 1, 120);
+    lv_obj_align(table1, LV_ALIGN_TOP_MID, 0, 0);
 
-    btn4 = lv_list_add_btn(list1, NULL, "Brightness:");
-    lv_obj_add_event_cb(btn4, my_gui_btn_cb, LV_EVENT_KEY, NULL);
-
-    // 创建group
-    lv_group_t * group1 = lv_group_create();
-    lv_indev_set_group(lv_win32_keypad_device_object, group1);     // 将键盘和组关联
-    lv_group_add_obj(group1, btn1);
-    lv_group_add_obj(group1, btn2);
-    lv_group_add_obj(group1, btn3);
-    lv_group_add_obj(group1, btn4);
-    lv_group_set_default(group1);   // 设置为默认组
-
-    // 创建config值 label
-    static lv_obj_t * label1;
-    static struct my_gui_config_value cfg1 = {.cfg_range = ARRAYSIZE(cfg_freq), .cfg_value = 1, cfg_freq};
-    label1 = lv_label_create(btn1);
-    lv_label_set_text(label1, cfg1.cfg_str[cfg1.cfg_value]);
-    lv_label_set_long_mode(label1, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_flex_grow(label1, 1);
-    lv_obj_set_user_data(btn1, label1); // 将label对象关联到btn对象，减少全局变量使用
-    lv_obj_set_user_data(label1, &cfg1); // 将cfg数据关联到label对象，减少全局变量使用
-
-    static lv_obj_t * label2;
-    static struct my_gui_config_value cfg2 = {.cfg_range = ARRAYSIZE(cfg_rate), .cfg_value = 1, cfg_rate};
-    label2 = lv_label_create(btn2);
-    lv_label_set_text(label2, cfg2.cfg_str[cfg2.cfg_value]);
-    lv_label_set_long_mode(label2, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_flex_grow(label2, 1);
-    lv_obj_set_user_data(btn2, label2);
-    lv_obj_set_user_data(label2, &cfg2);
-
-    static lv_obj_t * label3;
-    static struct my_gui_config_value cfg3 = {.cfg_range = ARRAYSIZE(cfg_percent), .cfg_value = 5, cfg_percent};
-    label3 = lv_label_create(btn3);
-    lv_label_set_text(label3, cfg3.cfg_str[cfg3.cfg_value]);
-    lv_label_set_long_mode(label3, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_flex_grow(label3, 1);
-    lv_obj_set_user_data(btn3, label3);
-    lv_obj_set_user_data(label3, &cfg3);
-
-    static lv_obj_t * label4;
-    static struct my_gui_config_value cfg4 = {.cfg_range = ARRAYSIZE(cfg_percent), .cfg_value = 5, cfg_percent};
-    label4 = lv_label_create(btn4);
-    lv_label_set_text(label4, cfg4.cfg_str[cfg4.cfg_value]);
-    lv_label_set_long_mode(label4, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_flex_grow(label4, 1);
-    lv_obj_set_user_data(btn4, label4);
-    lv_obj_set_user_data(label4, &cfg4);
-
+    
 #endif
 
 #if 1
     // tabview中增加一个tab
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Comm");
+    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Charge");
     lv_obj_set_scrollbar_mode(tab2, LV_SCROLLBAR_MODE_OFF);
+
+    static lv_style_t style2;    // 需要为static，不然不起作用
+    lv_style_init(&style2);
+    lv_style_set_radius(&style2, 0);	// tao:无圆角
+    lv_style_set_bg_opa(&style2, LV_OPA_TRANSP); // 背景透明
+    lv_style_set_border_width(&style2, 0);	// 无边框
 
     /*Add content to the tab2*/
     lv_obj_t * table = lv_table_create(tab2);
     lv_group_remove_obj(table); // 不分配group
-    lv_table_set_cell_value(table, 0, 0, "ISSI");
-    lv_table_set_cell_value(table, 0, 1, "0db");
-    lv_table_set_cell_value(table, 1, 0, "TXCnt");
-    lv_table_set_cell_value(table, 1, 1, "0");
-    lv_table_set_cell_value(table, 2, 0, "RXCnt");
-    lv_table_set_cell_value(table, 2, 1, "0");
+	lv_obj_add_style(table, &style2, 0);
+
+	// tao:设置表格的行数和列数
+	lv_table_set_row_cnt(table, 4);
+	lv_table_set_col_cnt(table, 2);
+
+    lv_table_set_cell_value(table, 0, 0, "Charge Voltage");
+    lv_table_set_cell_value(table, 0, 1, "0 V");
+    lv_table_set_cell_value(table, 1, 0, "Charge Current");
+    lv_table_set_cell_value(table, 1, 1, "0 A");
+    lv_table_set_cell_value(table, 2, 0, "Quantity of Electricity");
+    lv_table_set_cell_value(table, 2, 1, "0 %");
+	lv_table_set_cell_value(table, 3, 0, "Scheduled Time");
+    lv_table_set_cell_value(table, 3, 1, "0 H");
 
     /*Set a smaller height to the table. It'll make it scrollable*/
-    lv_table_set_col_width(table, 0, 105);
-    lv_table_set_col_width(table, 1, 105);
-    // lv_obj_set_height(table, 220);
+    lv_table_set_col_width(table, 0, 120);
+    lv_table_set_col_width(table, 1, 120);
     lv_obj_align(table, LV_ALIGN_TOP_MID, 0, 0);
+    // lv_obj_set_height(table, 220);
 #endif
 
 #if 1
     // tabview中增加一个tab
-    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "About");
+    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Discharge");
     lv_obj_set_scrollbar_mode(tab3, LV_SCROLLBAR_MODE_OFF);
 
-    /*Add content to the tab3*/
-    lv_obj_t * label = lv_label_create(tab3);
-    lv_label_set_text(label, "Version: 0.0.2");
-    lv_obj_align(label, LV_ALIGN_TOP_LEFT, 10, 10);
+    static lv_style_t style3;    // 需要为static，不然不起作用
+    lv_style_init(&style3);
+    lv_style_set_radius(&style3, 0);	// tao:无圆角
+    lv_style_set_bg_opa(&style3, LV_OPA_TRANSP); // 背景透明
+    lv_style_set_border_width(&style3, 0);	// 无边框
+
+    /*Add content to the tab2*/
+	lv_obj_t * table3 = lv_table_create(tab3);
+    lv_group_remove_obj(table3); // 不分配group
+	lv_obj_add_style(table3, &style3, 0);
+
+	// tao:设置表格的行数和列数
+	lv_table_set_row_cnt(table3, 4);
+	lv_table_set_col_cnt(table3, 2);
+
+    lv_table_set_cell_value(table3, 0, 0, "Discharge Voltage");
+    lv_table_set_cell_value(table3, 0, 1, "0 V");
+    lv_table_set_cell_value(table3, 1, 0, "Discharge Current");
+    lv_table_set_cell_value(table3, 1, 1, "0 A");
+    lv_table_set_cell_value(table3, 2, 0, "Remaining Capacity");
+    lv_table_set_cell_value(table3, 2, 1, "0 %");
+	lv_table_set_cell_value(table3, 3, 0, "Accumulated Discharge Power");
+    lv_table_set_cell_value(table3, 3, 1, "0 KWH");
+
+	lv_table_set_col_width(table3, 0, 120);
+    lv_table_set_col_width(table3, 1, 120);
+    lv_obj_align(table3, LV_ALIGN_TOP_MID, 0, 0);
 #endif
 }
 

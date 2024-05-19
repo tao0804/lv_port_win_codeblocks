@@ -3,4 +3,6 @@
 
 void lv_100ask_demo_course_3_2_1(void);
 
+void lv_tao_example_list_1(void);
+
 #endif /*MY_TEST_H__*/
