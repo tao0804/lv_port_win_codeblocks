@@ -46,3 +46,36 @@ void lv_100ask_demo_course_3_3_1(void)
 
     lv_group_focus_obj(btn1);
 }
+
+static lv_group_t *group1;
+
+static void textarea_event_handler(lv_event_t * e)
+{
+    lv_obj_t * ta = lv_event_get_target(e);
+    LV_LOG_USER("Enter was pressed. The current text is: %s", lv_textarea_get_text(ta));
+}
+
+void lv_example_textarea_my(void)
+{
+    lv_obj_t * ta = lv_textarea_create(lv_scr_act());
+    lv_textarea_set_one_line(ta, true);
+    lv_textarea_set_accepted_chars(ta, "0123456789");   // 设置仅接受数字字符
+    lv_obj_align(ta, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_width(ta, 200);
+    lv_obj_add_event_cb(ta, textarea_event_handler, LV_EVENT_READY, NULL);
+    lv_obj_add_state(ta, LV_STATE_FOCUSED); /*To be sure the cursor is visible*/
+
+    lv_obj_t * ta2 = lv_textarea_create(lv_scr_act());
+    lv_textarea_set_one_line(ta2, true);
+    lv_textarea_set_accepted_chars(ta2, "0123456789");   // 设置仅接受数字字符
+    lv_obj_align(ta2, LV_ALIGN_TOP_MID, 0, 60);
+    lv_obj_set_width(ta2, 200);
+    lv_obj_add_event_cb(ta2, textarea_event_handler, LV_EVENT_READY, NULL);
+    lv_obj_clear_state(ta2, LV_STATE_FOCUSED); /*To be sure the cursor is visible*/
+
+    // 创建group
+    group1 = lv_group_create();
+    lv_group_add_obj(group1, ta);
+    lv_group_add_obj(group1, ta2);
+    lv_indev_set_group(lv_win32_keypad_device_object, group1);     // 将键盘和组1关联
+}
