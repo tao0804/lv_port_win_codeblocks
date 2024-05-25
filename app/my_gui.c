@@ -2,9 +2,10 @@
 #include "lvgl/lvgl.h"
 #include "lv_drivers/win32drv/win32drv.h"
 
-lv_obj_t *tabview;
-lv_group_t *group1, *group2;
-lv_obj_t *btn1, *btn2, *btn3, *btn4;
+static lv_obj_t *tabview;
+static lv_group_t *group1, *group2;
+static lv_obj_t *btn1, *btn2, *btn3, *btn4;
+static lv_obj_t * ta1;
 
 #define  BATTERY_OUTLINE_W    40 //电池图标宽度
 #define  BATTERY_OUTLINE_H    20 //电池图标高度
@@ -162,6 +163,7 @@ static void my_gui_set_group(lv_group_t *g)
         lv_group_add_obj(group1, btn2);
         lv_group_add_obj(group1, btn3);
         lv_group_add_obj(group1, btn4);
+        lv_group_add_obj(group1, ta1);
         lv_indev_set_group(lv_win32_keypad_device_object, group1);     // 将键盘和组1关联
     } else if (g == group2) {
         lv_group_remove_all_objs(group2);
@@ -207,6 +209,12 @@ static void my_gui_tv_cb(lv_event_t * e)
     lv_tabview_set_act(tv, act_id, LV_ANIM_OFF);    // 设置完group后再切，否则存在问题，不能开启动画，否则动画帧有focus问题
 }
 
+static void textarea_event_handler(lv_event_t * e)
+{
+    lv_obj_t * ta = lv_event_get_target(e);
+    LV_LOG_USER("Enter was pressed. The current text is: %s", lv_textarea_get_text(ta));
+}
+
 static void my_gui_tabview_init(void)
 {
     /*Create a Tab view object*/
@@ -245,6 +253,16 @@ static void my_gui_tabview_init(void)
 
     btn4 = lv_list_add_btn(list1, NULL, "Brightness:");
     lv_obj_add_event_cb(btn4, my_gui_btn_cb, LV_EVENT_KEY, NULL);
+
+    // 创建textarea
+    lv_obj_t *  btn5 = lv_list_add_btn(list1, NULL, "Code:");
+    ta1 = lv_textarea_create(btn5);
+    lv_textarea_set_one_line(ta1, true);
+    lv_textarea_set_accepted_chars(ta1, "0123456789");   // 设置仅接受数字字符
+    lv_obj_align(ta1, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_width(ta1, 100);
+    lv_obj_add_event_cb(ta1, textarea_event_handler, LV_EVENT_READY, NULL);
+    lv_obj_clear_state(ta1, LV_STATE_FOCUSED);
 
     // 创建group
     group1 = lv_group_create();
