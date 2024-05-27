@@ -122,6 +122,7 @@ char *cfg_freq[] = {"2430MHz", "2440MHz", "2450MHz"};
 char *cfg_rate[] = {"100Kbps","500Kbps","1Mbps"};
 char *cfg_percent[] = {"0\%", "10\%", "20\%", "30\%", "40\%", "50\%", "60\%", "70\%", "80\%", "90\%", "100\%"};
 
+// 暂时不用
 static void my_gui_btn_cb(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -147,6 +148,14 @@ static void my_gui_btn_cb(lv_event_t * e)
             lv_label_set_text(label, cfg->cfg_str[cfg->cfg_value]);
         }
     }
+
+}
+
+// 处理文本框输入
+static void textarea_event_handler(lv_event_t * e)
+{
+    lv_obj_t * ta = lv_event_get_target(e);
+    LV_LOG_USER("Enter was pressed. The current text is: %s", lv_textarea_get_text(ta));
 }
 
 static void my_gui_tabview_init(void)
@@ -156,6 +165,7 @@ static void my_gui_tabview_init(void)
     tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 40);  // tab_size 设置选项卡高度
     lv_obj_set_size(tabview, 240, 300);  // 设置整体大小
     lv_obj_align(tabview, LV_ALIGN_TOP_MID, 0, 20);
+	lv_group_t * g1 = lv_group_create();
 
 #if 1
     // tabview中增加一个tab
@@ -170,20 +180,46 @@ static void my_gui_tabview_init(void)
 
     /*Add content to the tab2*/
     lv_obj_t * table1 = lv_table_create(tab1);
+    lv_obj_set_scrollbar_mode(table1, LV_SCROLLBAR_MODE_OFF);     // 关滚动栏
     lv_group_remove_obj(table1); // 不分配group
 	lv_obj_add_style(table1, &style1, 0);
 
 	// tao:设置表格的行数和列数
-	lv_table_set_row_cnt(table1, 3);
+	lv_table_set_row_cnt(table1, 4);
 	lv_table_set_col_cnt(table1, 2);
 
+	// 创建一个label,设置120宽度,折叠右对齐
+	lv_obj_t * label1 = lv_label_create(table1);
+	lv_label_set_text(label1, "Authorization Code:");
+	lv_obj_set_width(label1, 120);
+	lv_obj_align(label1, LV_ALIGN_TOP_MID, -45, 0);
+
+	lv_obj_t * ta = lv_textarea_create(table1);	//基于table创建Textarea
+	lv_textarea_set_one_line(ta, true);			// 设置文本区域为单行模式
+    lv_obj_align(ta, LV_ALIGN_TOP_MID, 140, 4);
+    lv_textarea_set_accepted_chars(ta, "0123456789");		// 限制输入框只能输入数字
+    lv_textarea_set_max_length(ta, 5);		// 最大输入长度为5个字符
+    lv_obj_add_event_cb(ta, textarea_event_handler, LV_EVENT_READY, ta);
+	lv_group_add_obj(g1, ta);
+
+	// lv_obj_t * btn;
+	// lv_obj_add_event_cb(btn, my_gui_btn_cb, LV_EVENT_VALUE_CHANGED, ta);
+
+
 	// 实际值和单位需要转成一条字符串,到时问gpt如何传入
-    lv_table_set_cell_value(table1, 0, 0, "Current Voltage");
-    lv_table_set_cell_value(table1, 0, 1, "0 V");
-    lv_table_set_cell_value(table1, 1, 0, "Current Current");
-    lv_table_set_cell_value(table1, 1, 1, "0 A");
-    lv_table_set_cell_value(table1, 2, 0, "Current Power");
-    lv_table_set_cell_value(table1, 2, 1, "0 W");
+	lv_table_set_cell_value(table1, 1, 0, "Current Voltage");
+    lv_table_set_cell_value(table1, 1, 1, "0 V");
+    lv_table_set_cell_value(table1, 2, 0, "Current Current");
+    lv_table_set_cell_value(table1, 2, 1, "0 A");
+    lv_table_set_cell_value(table1, 3, 0, "Current Power");
+    lv_table_set_cell_value(table1, 3, 1, "0 W");
+
+    // lv_table_set_cell_value(table1, 0, 0, "Current Voltage");
+    // lv_table_set_cell_value(table1, 0, 1, "0 V");
+    // lv_table_set_cell_value(table1, 1, 0, "Current Current");
+    // lv_table_set_cell_value(table1, 1, 1, "0 A");
+    // lv_table_set_cell_value(table1, 2, 0, "Current Power");
+    // lv_table_set_cell_value(table1, 2, 1, "0 W");
 
     /*Set a smaller height to the table. It'll make it scrollable*/
     lv_table_set_col_width(table1, 0, 120);
