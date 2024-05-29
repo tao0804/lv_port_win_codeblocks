@@ -5,6 +5,11 @@
 #define  BATTERY_OUTLINE_W    40 //电池图标宽度
 #define  BATTERY_OUTLINE_H    20 //电池图标高度
 
+static lv_obj_t * tabview;
+static lv_obj_t *btn, *btn1, *btn2, *btn3;
+static lv_obj_t *group1, *group2;		// a little trick 
+static lv_obj_t * ta;
+
 static void my_gui_battery_cb(void* p, int32_t v)
 {
     //实现变色效果，电池电量低于20% 红色
@@ -148,85 +153,108 @@ static void my_gui_btn_cb(lv_event_t * e)
             lv_label_set_text(label, cfg->cfg_str[cfg->cfg_value]);
         }
     }
-
 }
+
+static void my_gui_set_group(lv_group_t * g)
+{
+    if(g == group1){
+		lv_group_remove_all_objs(group1);	// 重置group的内容
+		// lv_group_add_obj(group1, lv_tabview_get_tab_btns(tabview));	// tabview按键也加进group1
+		lv_group_add_obj(group1, ta);
+		lv_group_add_obj(group1, btn1);
+		lv_group_add_obj(group1, btn2);
+		lv_group_add_obj(group1, btn3);
+		lv_indev_set_group(lv_win32_keypad_device_object, group1);	// 大写一个牛
+	}
+}
+
+static void my_gui_tv_cb(lv_event_t * e)
+{
+	lv_event_code_t event_code = lv_event_get_code(e);
+	// lv_tabview_t *tv = tabview;
+	// uint32_t key = *(uint32_t *)lv_event_get_param(e);		// 获取参数值赋给key
+	// uint8_t act_id;
+
+	// if(event_code != LV_EVENT_KEY) return;	// 非key事件不处理
+	// if(act_id == 0){
+	// 	my_gui_set_group(group1);
+	// }else{
+		my_gui_set_group(group2);
+	// }
+	// lv_tabview_set_act(tv, act_id, LV_ANIM_OFF);	// 切换活动的选项卡
+}
+
 
 // 处理文本框输入
 static void textarea_event_handler(lv_event_t * e)
 {
-    lv_obj_t * ta = lv_event_get_target(e);
+    lv_obj_t * ta = lv_event_get_target(e);		// 获取触发事件
     LV_LOG_USER("Enter was pressed. The current text is: %s", lv_textarea_get_text(ta));
 }
 
 static void my_gui_tabview_init(void)
 {
-    /*Create a Tab view object*/
-    lv_obj_t * tabview;
     tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 40);  // tab_size 设置选项卡高度
     lv_obj_set_size(tabview, 240, 300);  // 设置整体大小
     lv_obj_align(tabview, LV_ALIGN_TOP_MID, 0, 20);
-	lv_group_t * g1 = lv_group_create();
 
 #if 1
-    // tabview中增加一个tab
+    // tabview中增加一个tab1
     lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Real-time");
     lv_obj_set_scrollbar_mode(tab1, LV_SCROLLBAR_MODE_OFF);     // 关滚动栏
 
-	static lv_style_t style1;    // 需要为static，不然不起作用
+	//创建样式,应用于list,直角边,透明背景,无边界值 
+	static lv_style_t style1;
     lv_style_init(&style1);
-    lv_style_set_radius(&style1, 0);	// tao:无圆角
-    lv_style_set_bg_opa(&style1, LV_OPA_TRANSP); // 背景透明
-    lv_style_set_border_width(&style1, 0);	// 无边框
+    lv_style_set_radius(&style1, 0);
+    lv_style_set_bg_opa(&style1, LV_OPA_TRANSP);
+    lv_style_set_border_width(&style1, 0);
 
-    /*Add content to the tab2*/
-    lv_obj_t * table1 = lv_table_create(tab1);
-    lv_obj_set_scrollbar_mode(table1, LV_SCROLLBAR_MODE_OFF);     // 关滚动栏
-    lv_group_remove_obj(table1); // 不分配group
-	lv_obj_add_style(table1, &style1, 0);
+    lv_obj_t * list1 = lv_list_create(tab1);
+	lv_obj_set_size(list1, 240, 300);
+	lv_obj_align(list1, LV_ALIGN_TOP_MID, 0, 0);
+	lv_obj_add_style(list1, &style1, 0);
 
-	// tao:设置表格的行数和列数
-	lv_table_set_row_cnt(table1, 4);
-	lv_table_set_col_cnt(table1, 2);
+	// 创建按键,创建textarea
+	btn = lv_list_add_btn(list1, NULL, "Authorize\nCode:"); // v8.3版本中,如果字符串太长,默认情况下会启用滚动效果
+	ta = lv_textarea_create(btn);	// 花了一点时间想到还能这样
 
-	// 创建一个label,设置120宽度,折叠右对齐
-	lv_obj_t * label1 = lv_label_create(table1);
-	lv_label_set_text(label1, "Authorization Code:");
-	lv_obj_set_width(label1, 120);
-	lv_obj_align(label1, LV_ALIGN_TOP_MID, -45, 0);
+	lv_textarea_set_one_line(ta, true);
+	lv_textarea_set_accepted_chars(ta, "0123456789");
+	lv_textarea_set_max_length(ta, 5);
+	lv_obj_set_width(ta, 100);
+	lv_obj_align(ta, LV_ALIGN_CENTER, 0, 0);
+	lv_obj_set_width(ta, 100);
+	lv_obj_add_event_cb(ta, textarea_event_handler, LV_EVENT_READY, ta);
 
-	lv_obj_t * ta = lv_textarea_create(table1);	//基于table创建Textarea
-	lv_textarea_set_one_line(ta, true);			// 设置文本区域为单行模式
-    lv_obj_align(ta, LV_ALIGN_TOP_MID, 140, 4);
-    lv_textarea_set_accepted_chars(ta, "0123456789");		// 限制输入框只能输入数字
-    lv_textarea_set_max_length(ta, 5);		// 最大输入长度为5个字符
-    lv_obj_add_event_cb(ta, textarea_event_handler, LV_EVENT_READY, ta);
-	lv_group_add_obj(g1, ta);
+    // 除了授权码,其余内容不需要实现上下控制
+    btn1 = lv_list_add_btn(list1, NULL, "Current\nVoltage:");
+    lv_obj_t * label1 = lv_label_create(btn1);
+    // // todo:字符串表示值无法显示在中间位置
+    lv_label_set_text(label1, "0 V");
+	// lv_obj_align(label1, LV_ALIGN_TOP_LEFT, 0, 0);
+    // lv_obj_set_width(label1, lv_obj_get_width(btn1));
+    lv_obj_set_flex_grow(label1, 1);    // 设置标签和文本区域的成长比例为1，这样它们会在可用空间内平均分配
+    // lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, 0);
+    // lv_obj_set_size(label1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    btn2 = lv_list_add_btn(list1, NULL, "Current\nCurrent:");
+    btn3 = lv_list_add_btn(list1, NULL, "Current\nPower:");
 
-	// lv_obj_t * btn;
-	// lv_obj_add_event_cb(btn, my_gui_btn_cb, LV_EVENT_VALUE_CHANGED, ta);
+ 
+	// 创建和设置group
+	group1 = lv_group_create();
+	my_gui_set_group(group1);
+
+	// 创建group2,tabview按键回调
+	group2 = lv_group_create();
+	// my_gui_set_group(group2);
+	lv_obj_add_event_cb(lv_tabview_get_tab_btns(tabview), my_gui_tv_cb, LV_EVENT_KEY, NULL);
 
 
-	// 实际值和单位需要转成一条字符串,到时问gpt如何传入
-	lv_table_set_cell_value(table1, 1, 0, "Current Voltage");
-    lv_table_set_cell_value(table1, 1, 1, "0 V");
-    lv_table_set_cell_value(table1, 2, 0, "Current Current");
-    lv_table_set_cell_value(table1, 2, 1, "0 A");
-    lv_table_set_cell_value(table1, 3, 0, "Current Power");
-    lv_table_set_cell_value(table1, 3, 1, "0 W");
 
-    // lv_table_set_cell_value(table1, 0, 0, "Current Voltage");
-    // lv_table_set_cell_value(table1, 0, 1, "0 V");
-    // lv_table_set_cell_value(table1, 1, 0, "Current Current");
-    // lv_table_set_cell_value(table1, 1, 1, "0 A");
-    // lv_table_set_cell_value(table1, 2, 0, "Current Power");
-    // lv_table_set_cell_value(table1, 2, 1, "0 W");
 
-    /*Set a smaller height to the table. It'll make it scrollable*/
-    lv_table_set_col_width(table1, 0, 120);
-    lv_table_set_col_width(table1, 1, 120);
-    lv_obj_align(table1, LV_ALIGN_TOP_MID, 0, 0);
 
-    
+     
 #endif
 
 #if 1
