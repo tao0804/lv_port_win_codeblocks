@@ -218,7 +218,6 @@ static void my_gui_tabview_init(void)
 	// 创建按键,创建textarea
 	btn = lv_list_add_btn(list1, NULL, "Authorize\nCode:"); // v8.3版本中,如果字符串太长,默认情况下会启用滚动效果
 	ta = lv_textarea_create(btn);	// 花了一点时间想到还能这样
-
 	lv_textarea_set_one_line(ta, true);
 	lv_textarea_set_accepted_chars(ta, "0123456789");
 	lv_textarea_set_max_length(ta, 5);
@@ -227,19 +226,31 @@ static void my_gui_tabview_init(void)
 	lv_obj_set_width(ta, 100);
 	lv_obj_add_event_cb(ta, textarea_event_handler, LV_EVENT_READY, ta);
 
-    // 除了授权码,其余内容不需要实现上下控制
-    btn1 = lv_list_add_btn(list1, NULL, "Current\nVoltage:");
-    lv_obj_t * label1 = lv_label_create(btn1);
-    // // todo:字符串表示值无法显示在中间位置
-    lv_label_set_text(label1, "0 V");
-	// lv_obj_align(label1, LV_ALIGN_TOP_LEFT, 0, 0);
-    // lv_obj_set_width(label1, lv_obj_get_width(btn1));
-    lv_obj_set_flex_grow(label1, 1);    // 设置标签和文本区域的成长比例为1，这样它们会在可用空间内平均分配
-    // lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, 0);
-    // lv_obj_set_size(label1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    btn2 = lv_list_add_btn(list1, NULL, "Current\nCurrent:");
-    btn3 = lv_list_add_btn(list1, NULL, "Current\nPower:");
 
+    btn1 = lv_list_add_btn(list1, NULL, "Current\nVoltage:");
+	// 弹性布局(和对齐方式是两种不同的布局管理方法,在设置了弹性布局后,对象的位置和对齐方式将由弹性布局管理
+	lv_obj_set_flex_flow(btn1, LV_FLEX_FLOW_ROW);
+
+    lv_obj_t * label1 = lv_label_create(btn1);
+    lv_label_set_text(label1, "0 V");
+    lv_obj_set_flex_grow(label1, 1);    // 设置标签成长比例为1,这样它们会在可用空间内平均分配
+
+	// carefull
+	lv_obj_set_flex_align(btn1, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+
+    btn2 = lv_list_add_btn(list1, NULL, "Current\nCurrent:");
+	lv_obj_set_flex_flow(btn2, LV_FLEX_FLOW_ROW);
+	lv_obj_t * label2 = lv_label_create(btn2);
+	lv_label_set_text(label2, "0 A");
+	lv_obj_set_flex_grow(label2, 1);
+	lv_obj_set_flex_align(btn2, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+
+    btn3 = lv_list_add_btn(list1, NULL, "Current\nPower:");
+	lv_obj_set_flex_flow(btn3, LV_FLEX_FLOW_ROW);
+	lv_obj_t * label3 = lv_label_create(btn3);
+	lv_label_set_text(label3, "0 A");
+	lv_obj_set_flex_grow(label3, 1);
+	lv_obj_set_flex_align(btn3, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
  
 	// 创建和设置group
 	group1 = lv_group_create();
@@ -249,10 +260,6 @@ static void my_gui_tabview_init(void)
 	group2 = lv_group_create();
 	// my_gui_set_group(group2);
 	lv_obj_add_event_cb(lv_tabview_get_tab_btns(tabview), my_gui_tv_cb, LV_EVENT_KEY, NULL);
-
-
-
-
 
      
 #endif
