@@ -9,6 +9,7 @@ static lv_obj_t * tabview;
 static lv_obj_t *btn, *btn1, *btn2, *btn3;
 static lv_obj_t *group1, *group2;		// a little trick 
 static lv_obj_t * ta;
+uint8_t cur_id;
 
 static void my_gui_battery_cb(void* p, int32_t v)
 {
@@ -159,29 +160,56 @@ static void my_gui_set_group(lv_group_t * g)
 {
     if(g == group1){
 		lv_group_remove_all_objs(group1);	// 重置group的内容
-		// lv_group_add_obj(group1, lv_tabview_get_tab_btns(tabview));	// tabview按键也加进group1
+		lv_group_add_obj(group1, lv_tabview_get_tab_btns(tabview));	// tabview按键也加进group1
 		lv_group_add_obj(group1, ta);
 		lv_group_add_obj(group1, btn1);
 		lv_group_add_obj(group1, btn2);
 		lv_group_add_obj(group1, btn3);
 		lv_indev_set_group(lv_win32_keypad_device_object, group1);	// 大写一个牛
+	}else if(g == group2){
+		lv_group_remove_all_objs(group2);
+		lv_group_add_obj(group2, lv_tabview_get_tab_btns(tabview));
+		lv_indev_set_group(lv_win32_keypad_device_object, group2);
 	}
 }
 
 static void my_gui_tv_cb(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);
-	// lv_tabview_t *tv = tabview;
-	// uint32_t key = *(uint32_t *)lv_event_get_param(e);		// 获取参数值赋给key
+	lv_tabview_t *tv = tabview;
+	uint32_t key = *(uint32_t *)lv_event_get_param(e);		// 获取参数值赋给key
+
+	// 创全局变量cur_id
 	// uint8_t act_id;
 
-	// if(event_code != LV_EVENT_KEY) return;	// 非key事件不处理
-	// if(act_id == 0){
-	// 	my_gui_set_group(group1);
-	// }else{
+	if(event_code != LV_EVENT_KEY){
+		return;	// 非key事件不处理
+	}
+
+	if (key == LV_KEY_RIGHT){
+		if(cur_id < 2){
+			cur_id = cur_id + 1;
+		}
+		else{
+			cur_id = 0;
+		}
+		LV_LOG_USER("right, cur:%d", cur_id);
+	}else if(key == LV_KEY_LEFT){
+		if(cur_id > 0){
+			cur_id = cur_id - 1;
+		}
+		else{
+			cur_id = 2;
+		}
+		LV_LOG_USER("left, cur:%d", cur_id);
+	}
+	
+	if(cur_id == 0){
+		my_gui_set_group(group1);
+	}else{
 		my_gui_set_group(group2);
-	// }
-	// lv_tabview_set_act(tv, act_id, LV_ANIM_OFF);	// 切换活动的选项卡
+	}
+	lv_tabview_set_act(tv, cur_id, LV_ANIM_OFF);	// 切换活动的选项卡
 }
 
 
